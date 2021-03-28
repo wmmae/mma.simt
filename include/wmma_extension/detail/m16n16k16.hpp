@@ -57,7 +57,7 @@ class fragment<nvcuda::wmma::accumulator, 16, 16, 16, T> : public mtk::wmma::mma
 
 // foreach
 template <class Func, class T>
-__device__ foreach(
+__device__ void foreach(
 		fragment<nvcuda::wmma::matrix_a, 16, 16, 16, T, nvcuda::wmma::col_major>& frag, const Func func
 		) {
 	const auto m = threadIdx.x & 0xf;
@@ -68,7 +68,7 @@ __device__ foreach(
 }
 
 template <class Func, class T>
-__device__ foreach(
+__device__ void foreach(
 		fragment<nvcuda::wmma::matrix_a, 16, 16, 16, T, nvcuda::wmma::row_major>& frag, const Func func
 		) {
 	const auto m = threadIdx.x & 0xf;
@@ -79,7 +79,7 @@ __device__ foreach(
 }
 
 template <class Func, class T>
-__device__ foreach(
+__device__ void foreach(
 		fragment<nvcuda::wmma::matrix_b, 16, 16, 16, T, nvcuda::wmma::col_major>& frag, const Func func
 		) {
 	const auto n = threadIdx.x & 0xf;
@@ -90,7 +90,7 @@ __device__ foreach(
 }
 
 template <class Func, class T>
-__device__ foreach(
+__device__ void foreach(
 		fragment<nvcuda::wmma::matrix_b, 16, 16, 16, T, nvcuda::wmma::row_major>& frag, const Func func
 		) {
 	const auto n = threadIdx.x & 0xf;
@@ -121,7 +121,7 @@ __device__ void mma_sync(
 		fragment<nvcuda::wmma::accumulator, 16, 16, 16, D_T , void>& frag_d,
 		const fragment<nvcuda::wmma::matrix_a   , 16, 16, 16, AB_T, A_Layout>& frag_a,
 		const fragment<nvcuda::wmma::matrix_b   , 16, 16, 16, AB_T, B_Layout>& frag_b,
-		const fragment<nvcuda::wmma::accumulator, 16, 16, 16, C_T , void>& frag_c,
+		const fragment<nvcuda::wmma::accumulator, 16, 16, 16, C_T , void>& frag_c
 		) {
 	AB_T array_a[frag_a.num_elements];
 	AB_T array_b[frag_b.num_elements];
@@ -129,7 +129,7 @@ __device__ void mma_sync(
 
 	// init C
 	for (unsigned i = 0; i < frag_c.num_elements; i++) {
-		array_acc[i] = detail::cast_to<C_T>(0.0f);
+		array_acc[i] = detail::cast<C_T>(0.0f);
 	}
 
 	// init A, B
