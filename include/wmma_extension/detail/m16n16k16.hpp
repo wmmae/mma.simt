@@ -49,16 +49,16 @@ namespace mtk {
 namespace wmma {
 namespace mma_simt {
 template <class T, class Layout>
-class fragment_simt<nvcuda::wmma::matrix_a   , 16, 16, 16, T, Layout> : public mtk::wmma::mma_simt::detail::__frag_base<T, 8>{};
+class fragment<nvcuda::wmma::matrix_a   , 16, 16, 16, T, Layout> : public mtk::wmma::mma_simt::detail::__frag_base<T, 8>{};
 template <class T, class Layout>
-class fragment_simt<nvcuda::wmma::matrix_b   , 16, 16, 16, T, Layout> : public mtk::wmma::mma_simt::detail::__frag_base<T, 8>{};
+class fragment<nvcuda::wmma::matrix_b   , 16, 16, 16, T, Layout> : public mtk::wmma::mma_simt::detail::__frag_base<T, 8>{};
 template <class T>
-class fragment_simt<nvcuda::wmma::accumulator, 16, 16, 16, T> : public mtk::wmma::mma_simt::detail::__frag_base<T, 8>{};
+class fragment<nvcuda::wmma::accumulator, 16, 16, 16, T> : public mtk::wmma::mma_simt::detail::__frag_base<T, 8>{};
 
 // foreach
 template <class Func, class T>
 __device__ foreach(
-		fragment_simt<nvcuda::wmma::matrix_a, 16, 16, 16, T, nvcuda::wmma::col_major>& frag, const Func func
+		fragment<nvcuda::wmma::matrix_a, 16, 16, 16, T, nvcuda::wmma::col_major>& frag, const Func func
 		) {
 	const auto m = threadIdx.x & 0xf;
 	const auto n_offset = (threadIdx.x >> 4) << 3;
@@ -69,7 +69,7 @@ __device__ foreach(
 
 template <class Func, class T>
 __device__ foreach(
-		fragment_simt<nvcuda::wmma::matrix_a, 16, 16, 16, T, nvcuda::wmma::row_major>& frag, const Func func
+		fragment<nvcuda::wmma::matrix_a, 16, 16, 16, T, nvcuda::wmma::row_major>& frag, const Func func
 		) {
 	const auto m = threadIdx.x & 0xf;
 	const auto n_offset = (threadIdx.x >> 4) << 3;
@@ -80,7 +80,7 @@ __device__ foreach(
 
 template <class Func, class T>
 __device__ foreach(
-		fragment_simt<nvcuda::wmma::matrix_b, 16, 16, 16, T, nvcuda::wmma::col_major>& frag, const Func func
+		fragment<nvcuda::wmma::matrix_b, 16, 16, 16, T, nvcuda::wmma::col_major>& frag, const Func func
 		) {
 	const auto n = threadIdx.x & 0xf;
 	const auto m_offset = (threadIdx.x >> 4) << 3;
@@ -91,7 +91,7 @@ __device__ foreach(
 
 template <class Func, class T>
 __device__ foreach(
-		fragment_simt<nvcuda::wmma::matrix_b, 16, 16, 16, T, nvcuda::wmma::row_major>& frag, const Func func
+		fragment<nvcuda::wmma::matrix_b, 16, 16, 16, T, nvcuda::wmma::row_major>& frag, const Func func
 		) {
 	const auto n = threadIdx.x & 0xf;
 	const auto m_offset = (threadIdx.x >> 4) << 3;
@@ -118,10 +118,10 @@ __device__ inline void foreach(mtk::wmma::mma_simt::fragment<nvcuda::wmma::accum
 // mma
 template <class AB_T, class A_Layout, class B_Layout, class C_T, class D_T>
 __device__ void mma_sync(
-		fragment_simt<nvcuda::wmma::accumulator, 16, 16, 16, D_T , void>& frag_d,
-		const fragment_simt<nvcuda::wmma::matrix_a   , 16, 16, 16, AB_T, A_Layout>& frag_a,
-		const fragment_simt<nvcuda::wmma::matrix_b   , 16, 16, 16, AB_T, B_Layout>& frag_b,
-		const fragment_simt<nvcuda::wmma::accumulator, 16, 16, 16, C_T , void>& frag_c,
+		fragment<nvcuda::wmma::accumulator, 16, 16, 16, D_T , void>& frag_d,
+		const fragment<nvcuda::wmma::matrix_a   , 16, 16, 16, AB_T, A_Layout>& frag_a,
+		const fragment<nvcuda::wmma::matrix_b   , 16, 16, 16, AB_T, B_Layout>& frag_b,
+		const fragment<nvcuda::wmma::accumulator, 16, 16, 16, C_T , void>& frag_c,
 		) {
 	AB_T array_a[frag_a.num_elements];
 	AB_T array_b[frag_b.num_elements];
