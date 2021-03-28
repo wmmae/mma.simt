@@ -128,11 +128,6 @@ __device__ void mma_sync(
 	AB_T array_b[frag_b.num_elements];
 	C_T  array_acc[frag_c.num_elements * 2];
 
-	// init C
-	for (unsigned i = 0; i < frag_c.num_elements; i++) {
-		array_acc[i] = detail::cast<C_T>(0.0f);
-	}
-
 	// init A, B
 	for (unsigned i = 0; i < frag_a.num_elements; i++) {
 		array_a[i] = frag_a.x[i];
@@ -148,20 +143,18 @@ __device__ void mma_sync(
 	};
 
 	unsigned acc_index = threadIdx.x & 0xf;
-	for (unsigned ci = 0; ci < frag_c.num_elements; ci++) {
+	for (unsigned k = 0; k < frag_a.num_elements; k++) {
+		array_acc[acc_index] = detail::fma(array_a[k], array_b[k], static_cast<C_T>(0));
+	}
+	for (unsigned s = 0; s < num_swaps; s++) {
+		const unsigned swap_index = swap_index_list[s];
+		acc_index ^= swap_index;
+		// swap a array
 		for (unsigned k = 0; k < frag_a.num_elements; k++) {
-			array_acc[0] = detail::fma(array_a[k], array_b[k], array_acc[0]);
-		}
-		for (unsigned s = 0; s < num_swaps; s++) {
-			const unsigned swap_index = swap_index_list[s];
-			acc_index ^= swap_index;
-			// swap a array
-			for (unsigned k = 0; k < frag_a.num_elements; k++) {
-				// swap
-				array_a[k] = __shfl_xor_sync(0xffffffff, array_a[k], swap_index);
-				// fma
-				array_acc[acc_index] = detail::fma(array_a[k], array_b[k], array_acc[acc_index]);
-			}
+			// swap
+			array_a[k] = __shfl_xor_sync(0xffffffff, array_a[k], swap_index);
+			// fma
+			array_acc[acc_index] = detail::fma(array_a[k], array_b[k], array_acc[acc_index]);
 		}
 	}
 
