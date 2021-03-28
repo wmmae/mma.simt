@@ -2,6 +2,7 @@
 #define __WMMAE_SIMT_DETAIL_M16N16K16__
 #include <mma.h>
 #include "common.hpp"
+#include "fma.hpp"
 
 // Fragment layout
 //                                   array_A/frag_A (len=8)
@@ -149,7 +150,7 @@ __device__ void mma_sync(
 	unsigned acc_index = threadIdx.x & 0xf;
 	for (unsigned ci = 0; ci < frag_c.num_elements; ci++) {
 		for (unsigned k = 0; k < frag_a.num_elements; k++) {
-			array_acc[0] += array_a[k] * array_b[k];
+			array_acc[0] = detail::fma(array_a[k], array_b[k], array_acc[0]);
 		}
 		for (unsigned s = 0; s < num_swaps; s++) {
 			const unsigned swap_index = swap_index_list[s];
@@ -159,7 +160,7 @@ __device__ void mma_sync(
 				// swap
 				array_a[k] = __shfl_xor_sync(0xffffffff, array_a[k], swap_index);
 				// fma
-				array_acc[acc_index] += array_a[k] * array_b[k];
+				array_acc[acc_index] = detail::fma(array_a[k], array_b[k], array_acc[acc_index]);
 			}
 		}
 	}
