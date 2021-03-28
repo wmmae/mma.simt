@@ -4,6 +4,9 @@
 namespace mtk {
 namespace wmma {
 namespace mma_simt {
+template <class Use, int m, int n, int k, class T, class Layout = void>
+class fragment_simt;
+
 namespace detail {
 template <typename T, int size>
 struct __align__(4) __frag_base {
