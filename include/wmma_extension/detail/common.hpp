@@ -1,6 +1,17 @@
 #ifndef __WMMAE_SIMT_DETAIL_COMMON__
 #define __WMMAE_SIMT_DETAIL_COMMON__
 #include <cuda_fp16.h>
+
+#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ < 800
+namespace nvcuda {
+namespace wmma {
+namespace precision {
+class tf32;
+} // namespace precision
+} // namespace wmma
+} // namespace nvcuda
+#endif
+
 namespace mtk {
 namespace wmma {
 namespace mma_simt {
