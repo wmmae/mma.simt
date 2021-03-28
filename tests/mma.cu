@@ -125,7 +125,7 @@ int main() {
 	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
 	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
 	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, float, nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
 	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
 	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
 	test_mma<16, float, nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
