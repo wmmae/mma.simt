@@ -63,7 +63,7 @@ __device__ void foreach(
 	const auto m = threadIdx.x & 0xf;
 	const auto n_offset = (threadIdx.x >> 4) << 3;
 	for (unsigned i = 0; i < frag.num_elements; i++) {
-		{const unsigned frag_index_list[1] = {1};func(frag_index_list, 1, m + 16 * (n_offset + i));}
+		{const unsigned frag_index_list[1] = {i};func(frag_index_list, 1, m + 16 * (n_offset + i));}
 	}
 }
 
@@ -74,7 +74,7 @@ __device__ void foreach(
 	const auto m = threadIdx.x & 0xf;
 	const auto n_offset = (threadIdx.x >> 4) << 3;
 	for (unsigned i = 0; i < frag.num_elements; i++) {
-		{const unsigned frag_index_list[1] = {1};func(frag_index_list, 1, m * 16 + (n_offset + i));}
+		{const unsigned frag_index_list[1] = {i};func(frag_index_list, 1, m * 16 + (n_offset + i));}
 	}
 }
 
@@ -85,7 +85,7 @@ __device__ void foreach(
 	const auto n = threadIdx.x & 0xf;
 	const auto m_offset = (threadIdx.x >> 4) << 3;
 	for (unsigned i = 0; i < frag.num_elements; i++) {
-		{const unsigned frag_index_list[1] = {1};func(frag_index_list, 1, n * 16 + (m_offset + i));}
+		{const unsigned frag_index_list[1] = {i};func(frag_index_list, 1, n * 16 + (m_offset + i));}
 	}
 }
 
@@ -96,7 +96,7 @@ __device__ void foreach(
 	const auto n = threadIdx.x & 0xf;
 	const auto m_offset = (threadIdx.x >> 4) << 3;
 	for (unsigned i = 0; i < frag.num_elements; i++) {
-		{const unsigned frag_index_list[1] = {1};func(frag_index_list, 1, n + 16 * (m_offset + i));}
+		{const unsigned frag_index_list[1] = {i};func(frag_index_list, 1, n + 16 * (m_offset + i));}
 	}
 }
 
@@ -106,11 +106,11 @@ __device__ inline void foreach(mtk::wmma::mma_simt::fragment<nvcuda::wmma::accum
 	const auto m_offset = (threadIdx.x >> 4) << 3;
 	if (layout == nvcuda::wmma::mem_col_major) {
 		for (unsigned i = 0; i < frag.num_elements; i++) {
-			{const unsigned frag_index_list[1] = {1};func(frag_index_list, 1, n * 16 + (m_offset + i));}
+			{const unsigned frag_index_list[1] = {i};func(frag_index_list, 1, n * 16 + (m_offset + i));}
 		}
 	} else {
 		for (unsigned i = 0; i < frag.num_elements; i++) {
-			{const unsigned frag_index_list[1] = {1};func(frag_index_list, 1, n + 16 * (m_offset + i));}
+			{const unsigned frag_index_list[1] = {i};func(frag_index_list, 1, n + 16 * (m_offset + i));}
 		}
 	}
 }
