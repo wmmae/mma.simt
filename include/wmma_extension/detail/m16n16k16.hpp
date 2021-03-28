@@ -143,12 +143,14 @@ __device__ void mma_sync(
 	};
 
 	unsigned acc_index = threadIdx.x & 0xf;
+	array_acc[acc_index] = detail::cast<C_T>(0);
 	for (unsigned k = 0; k < frag_a.num_elements; k++) {
-		array_acc[acc_index] = detail::fma(array_a[k], array_b[k], static_cast<C_T>(0));
+		array_acc[acc_index] = detail::fma(array_a[k], array_b[k], array_acc[acc_index]);
 	}
 	for (unsigned s = 0; s < num_swaps; s++) {
 		const unsigned swap_index = swap_index_list[s];
 		acc_index ^= swap_index;
+		array_acc[acc_index] = detail::cast<C_T>(0);
 		// swap a array
 		for (unsigned k = 0; k < frag_a.num_elements; k++) {
 			// swap
