@@ -25,13 +25,6 @@ struct __align__(4) __frag_base {
 	enum {num_elements = size};
 };
 
-template <class DST_T, class SRC_T>
-__device__ inline DST_T cast_to(const SRC_T src) {return static_cast<DST_T>(src);};
-template <>
-__device__ inline float cast_to<float, half>(const half src) {return __half2float(src);}
-template <>
-__device__ inline half cast_to<half, float>(const float src) {return __float2half(src);}
-
 template <class Use, int M, int N, int K> struct get_M;
 template <int M, int N, int K> struct get_M<nvcuda::wmma::matrix_a   , M, N, K>{static const int value = M;};
 template <int M, int N, int K> struct get_M<nvcuda::wmma::matrix_b   , M, N, K>{static const int value = K;};
@@ -45,18 +38,44 @@ template <int M, int N, int K> struct get_N<nvcuda::wmma::accumulator, M, N, K>{
 template <class Layout, int col_value, int row_value> struct layout_switch;
 template <int col_value, int row_value> struct layout_switch<nvcuda::wmma::col_major, col_value, row_value> {static const int value = col_value;};
 template <int col_value, int row_value> struct layout_switch<nvcuda::wmma::row_major, col_value, row_value> {static const int value = row_value;};
+
+template <class T>
+struct storage_t {using type = T;};
+template <class T> inline __device__ __host__ typename storage_t<T>::type cast(const float v);
+template <class T> inline __device__ __host__ typename storage_t<T>::type cast(const half v);
+template <> inline __device__ __host__ typename storage_t<float>::type cast<float>(const float v){return v;}
+template <> inline __device__ __host__ typename storage_t<half >::type cast<half >(const float v){return __float2half(v);}
+template <> inline __device__ __host__ typename storage_t<float>::type cast<float>(const half v){return __half2float(v);}
+template <> inline __device__ __host__ typename storage_t<half >::type cast<half >(const half v){return v;}
+
+template <> struct storage_t<nvcuda::wmma::precision::tf32> {using type = float;};
+__device__ __host__ inline float to_tf32(const float a) {
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 800
+	float ret;
+    asm("{.reg .b32 %mr;\n"
+        "cvt.rna.tf32.f32 %mr, %1;\n"
+        "mov.b32 %0, %mr;}\n" : "=f"(ret) : "f"(a));
+    return ret;
+#else
+	return a;
+#endif
+}
+template <> inline __device__ __host__ typename storage_t<nvcuda::wmma::precision::tf32>::type cast<nvcuda::wmma::precision::tf32>(const float v){return to_tf32(v);}
+template <> inline __device__ __host__ typename storage_t<nvcuda::wmma::precision::tf32>::type cast<nvcuda::wmma::precision::tf32>(const half  v){return to_tf32(__half2float(v));}
+
+
 } // namespace detail
 
 template <class T, class S, int size>
-__device__ inline void fill_fragment(__frag_base<float, size>& f, const S v) {
+__device__ inline void fill_fragment(detail::__frag_base<T, size>& f, const S v) {
 #pragma unroll
 	for (unsigned i = 0; i < f.num_elements; i++)
-		f.x[i] = detail::cast_to<T>(v);
+		f.x[i] = detail::cast<T>(v);
 }
 
-template <class Use, int M, int N, int K, class T, class Layout>
-__device__ inline void fill_zero(mtk::wmma::mma_simt::fragment<Use, M, N, K, T, Layout>& frag) {
-	fill_fragment(frag, 0.0f);
+template <class T, int size>
+__device__ inline void fill_zero(detail::__frag_base<T, size>& f) {
+	fill_fragment(f, 0.0f);
 }
 
 } // namespace mma_simt
