@@ -24,6 +24,16 @@ struct __align__(4) __frag_base {
 	T x[size];
 	enum {num_elements = size};
 };
+template <int size>
+struct __align__(2) __frag_base<half, size> {
+	half x[size];
+	enum {num_elements = size};
+};
+template <int size>
+struct __align__(8) __frag_base<double, size> {
+	double x[size];
+	enum {num_elements = size};
+};
 
 template <class Use, int M, int N, int K> struct get_M;
 template <int M, int N, int K> struct get_M<nvcuda::wmma::matrix_a   , M, N, K>{static const int value = M;};
@@ -41,12 +51,9 @@ template <int col_value, int row_value> struct layout_switch<nvcuda::wmma::row_m
 
 template <class T>
 struct storage_t {using type = T;};
-template <class T> inline __device__ __host__ typename storage_t<T>::type cast(const float v);
-template <class T> inline __device__ __host__ typename storage_t<T>::type cast(const half v);
-template <> inline __device__ __host__ typename storage_t<float>::type cast<float>(const float v){return v;}
-template <> inline __device__ __host__ typename storage_t<half >::type cast<half >(const float v){return __float2half(v);}
-template <> inline __device__ __host__ typename storage_t<float>::type cast<float>(const half v){return __half2float(v);}
-template <> inline __device__ __host__ typename storage_t<half >::type cast<half >(const half v){return v;}
+template <class DST, class SRC> inline __device__ __host__ typename storage_t<DST>::type cast(const SRC v) {return static_cast<DST>(v);}
+template <> inline __device__ __host__ typename storage_t<float>::type cast<float, half >(const half  v) {return __half2float(v);}
+template <> inline __device__ __host__ typename storage_t<half>::type  cast<half , float>(const float v) {return __float2half(v);}
 
 template <> struct storage_t<nvcuda::wmma::precision::tf32> {using type = float;};
 __device__ __host__ inline float to_tf32(const float a) {
@@ -60,9 +67,7 @@ __device__ __host__ inline float to_tf32(const float a) {
 	return a;
 #endif
 }
-template <> inline __device__ __host__ typename storage_t<nvcuda::wmma::precision::tf32>::type cast<nvcuda::wmma::precision::tf32>(const float v){return to_tf32(v);}
-template <> inline __device__ __host__ typename storage_t<nvcuda::wmma::precision::tf32>::type cast<nvcuda::wmma::precision::tf32>(const half  v){return to_tf32(__half2float(v));}
-
+template <> inline __device__ __host__ typename storage_t<nvcuda::wmma::precision::tf32>::type cast<nvcuda::wmma::precision::tf32, float>(const float v){return to_tf32(v);}
 
 } // namespace detail
 

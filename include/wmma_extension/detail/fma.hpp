@@ -15,6 +15,11 @@ __device__ inline C_T fma(const A_T a, const B_T b, const C_T c) {
 	return fa * fb + fc;
 }
 
+template <>
+__device__ inline double fma<double, double, double>(const double a, const double b, const double c) {
+	return a * b + c;
+}
+
 } // namespace detail
 } // namespace mma_simt
 } // namespace wmma
