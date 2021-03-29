@@ -1,6 +1,6 @@
 # MMA emulator on SIMT Core
 
-A library for computing gemm like WMMA API
+A software TensorCore library using warp shuffle
 
 ## Requirements
 
