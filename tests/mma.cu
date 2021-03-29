@@ -7,9 +7,11 @@ namespace {
 template <class T>
 constexpr double error_threshold = 0.0;
 template <>
-constexpr double error_threshold<half > = 1e-3;
+constexpr double error_threshold<half >  = 1e-3;
 template <>
-constexpr double error_threshold<float> = 1e-5;
+constexpr double error_threshold<float>  = 1e-6;
+template <>
+constexpr double error_threshold<double> = 1e-15;
 } // noname namespace
 
 template <unsigned N, class T, class A_Layout, class B_Layout>
@@ -89,7 +91,7 @@ void test_mma(const nvcuda::wmma::layout_t cd_layout) {
 	}
 
 	std::printf(
-			"[Type:%5s, N:%3u, A_Layout:%10s, B_Layout:%10s, C_Layout:%10s, FragShape<%2d,%2d,%2d>] max_error: %e (%6s)\n",
+			"[Type:%6s, N:%3u, A_Layout:%10s, B_Layout:%10s, C_Layout:%10s, FragShape<%2d,%2d,%2d>] max_error: %e (%6s)\n",
 			mtk::test_utils::to_string<T>().c_str(),
 			N,
 			mtk::test_utils::to_string<A_Layout>().c_str(),
@@ -97,7 +99,7 @@ void test_mma(const nvcuda::wmma::layout_t cd_layout) {
 			(cd_layout == nvcuda::wmma::mem_col_major) ? mtk::test_utils::to_string<nvcuda::wmma::col_major>().c_str() : mtk::test_utils::to_string<nvcuda::wmma::row_major>().c_str(),
 			N, N, N,
 			max_error,
-			(max_error < error_threshold<T> ? "PASSED" : "FAILED")
+			(max_error < (error_threshold<T> * N) ? "PASSED" : "FAILED")
 			);
 
 	cudaFreeHost(hA);
@@ -108,36 +110,51 @@ void test_mma(const nvcuda::wmma::layout_t cd_layout) {
 
 int main() {
 	// wmma FP16 test
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, half , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, half , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, float, nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, float, nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, float, nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
-	test_mma<16, float, nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, float, nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, float, nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, float, nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
-	test_mma<16, float, nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, half  , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, half  , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, half  , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, half  , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, half  , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, half  , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, half  , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, half  , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, half  , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, half  , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, half  , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, half  , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, half  , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, half  , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, half  , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, half  , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, half  , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, float , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, float , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, float , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, float , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, float , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, float , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, float , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, float , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, float , nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, float , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, float , nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, float , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, float , nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, float , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, float , nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, double, nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, double, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, double, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, double, nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, double, nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, double, nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, double, nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_col_major);
+	test_mma<16, double, nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, double, nvcuda::wmma::col_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, double, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, double, nvcuda::wmma::row_major, nvcuda::wmma::col_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, double, nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, double, nvcuda::wmma::col_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, double, nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
+	test_mma<16, double, nvcuda::wmma::row_major, nvcuda::wmma::row_major>(nvcuda::wmma::mem_row_major);
 }
