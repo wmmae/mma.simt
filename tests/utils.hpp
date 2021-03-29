@@ -13,6 +13,7 @@ template <> std::string to_string<nvcuda::wmma::matrix_a>       (){return "matri
 template <> std::string to_string<nvcuda::wmma::matrix_b>       (){return "matrix_b";}
 template <> std::string to_string<nvcuda::wmma::col_major>      (){return "col_major";}
 template <> std::string to_string<nvcuda::wmma::row_major>      (){return "row_major";}
+template <> std::string to_string<double>                       (){return "double";}
 template <> std::string to_string<float>                        (){return "float";}
 template <> std::string to_string<half>                         (){return "half";}
 
