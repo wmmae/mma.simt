@@ -20,9 +20,10 @@ template <> std::string to_string<half>                         (){return "half"
 
 constexpr unsigned warp_size = 32;
 
+template <class DST_T, class SRC_T>
 __device__ void copy_matrix(
-		float* const dst, const unsigned ldd,
-		const float* const src, const unsigned lds,
+		DST_T* const dst, const unsigned ldd,
+		const SRC_T* const src, const unsigned lds,
 		const unsigned m, const unsigned n) {
 	for (unsigned i = 0; i < m * n; i += warp_size) {
 		const auto j = i + threadIdx.x;
@@ -33,11 +34,12 @@ __device__ void copy_matrix(
 	}
 }
 
-__device__ void fill_zero(float* const dst, const unsigned size) {
+template <class T>
+__device__ void fill_zero(T* const dst, const unsigned size) {
 	for (unsigned i = 0; i < size; i += warp_size) {
 		const auto j = i + threadIdx.x;
 		if (j >= size) return;
-		dst[j] = 0.0f;
+		dst[j] = 0;
 	}
 }
 } // namespace test_utils

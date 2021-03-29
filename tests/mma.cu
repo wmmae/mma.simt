@@ -12,12 +12,17 @@ template <>
 constexpr double error_threshold<float>  = 1e-6;
 template <>
 constexpr double error_threshold<double> = 1e-15;
+
+template <class T>
+struct smem_t {using type = float;};
+template <>
+struct smem_t<double> {using type = double;};
 } // noname namespace
 
-template <unsigned N, class T, class A_Layout, class B_Layout>
-__global__ void mma_kernel_abcd(float* const d_ptr, const float* const a_ptr, const float* const b_ptr, const float* const c_ptr, const nvcuda::wmma::layout_t cd_layout) {
+template <unsigned N, class T, class A_Layout, class B_Layout, class MEM_T>
+__global__ void mma_kernel_abcd(MEM_T* const d_ptr, const MEM_T* const a_ptr, const MEM_T* const b_ptr, const MEM_T* const c_ptr, const nvcuda::wmma::layout_t cd_layout) {
 	constexpr unsigned LD = N;
-	__shared__ float smem[N * LD];
+	__shared__ MEM_T smem[N * LD];
 	mtk::test_utils::fill_zero(smem, N * LD);
 
 	mtk::wmma::mma_simt::fragment<nvcuda::wmma::matrix_a   , N, N, N, T, A_Layout> frag_a;
@@ -51,14 +56,15 @@ __global__ void mma_kernel_abcd(float* const d_ptr, const float* const a_ptr, co
 
 template <unsigned N, class T, class A_Layout, class B_Layout>
 void test_mma(const nvcuda::wmma::layout_t cd_layout) {
-	float *hA, *hB, *hC, *hD;
-	cudaMallocHost(&hA, N * N * sizeof(float));
-	cudaMallocHost(&hB, N * N * sizeof(float));
-	cudaMallocHost(&hC, N * N * sizeof(float));
-	cudaMallocHost(&hD, N * N * sizeof(float));
+	using mem_t = typename smem_t<T>::type;
+	mem_t *hA, *hB, *hC, *hD;
+	cudaMallocHost(&hA, N * N * sizeof(mem_t));
+	cudaMallocHost(&hB, N * N * sizeof(mem_t));
+	cudaMallocHost(&hC, N * N * sizeof(mem_t));
+	cudaMallocHost(&hD, N * N * sizeof(mem_t));
 
 	std::mt19937 mt(std::random_device{}());
-	std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+	std::uniform_real_distribution<mem_t> dist(-1.0f, 1.0f);
 
 	for (unsigned i = 0; i < N * N; i++) {
 			hA[i] = dist(mt);
@@ -67,7 +73,7 @@ void test_mma(const nvcuda::wmma::layout_t cd_layout) {
 	}
 	cudaDeviceSynchronize();
 
-	mma_kernel_abcd<N, T, A_Layout, B_Layout><<<1, mtk::test_utils::warp_size>>>(hD, hA, hB, hC, cd_layout);
+	mma_kernel_abcd<N, T, A_Layout, B_Layout, mem_t><<<1, mtk::test_utils::warp_size>>>(hD, hA, hB, hC, cd_layout);
 
 	const auto stat = cudaDeviceSynchronize();
 	if (stat != cudaSuccess) {
