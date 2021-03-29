@@ -1,4 +1,6 @@
-# MMA.SIMT - A software TensorCore using warp shuffle
+# MMA.SIMT - Software TensorCore using warp shuffle
+
+This library provides mma kernel like WMMA API
 
 ## Requirements
 
