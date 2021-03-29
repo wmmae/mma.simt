@@ -161,9 +161,10 @@ __device__ void mma_sync(
 	}
 
 	// collect C frag
-	const auto offset = ((threadIdx.x & 0xf) >> 4) * frag_c.num_elements;
+	const auto offset_0 = ((threadIdx.x & 0x1f) >> 4) * frag_c.num_elements;
+	const auto offset_1 = frag_c.num_elements - offset_0;
 	for (unsigned i = 0; i < frag_c.num_elements; i++) {
-		frag_d.x[i] = array_acc[i + offset] + __shfl_xor_sync(0xffffffff, array_acc[i + offset], 16) + frag_c.x[i];
+		frag_d.x[i] = array_acc[i + offset_0] + __shfl_xor_sync(0xffffffff, array_acc[i + offset_1], 16) + frag_c.x[i];
 	}
 }
 
