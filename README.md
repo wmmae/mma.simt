@@ -1,6 +1,7 @@
-# MMA emulator on SIMT Core
+# MMA.SIMT - Software TensorCore Emulator
 
-A software TensorCore library using warp shuffle
+- [x] Same API
+- [ ] Same computation (rounding, etc)
 
 ## Requirements
 
@@ -9,6 +10,11 @@ A software TensorCore library using warp shuffle
 
 ## Sample code
 ```cuda
+// main.cu
+// - build
+// nvcc main.cu -I/path/to/mma.simt/include ...
+#include <wmma_extension/mma_simt.hpp>
+
 __global__ void mma_kernel_abcd(float* const d_ptr, const float* const a_ptr, const float* const b_ptr, const float* const c_ptr) {
     constexpr unsigned LD = N;
     __shared__ float smem[N * LD];
