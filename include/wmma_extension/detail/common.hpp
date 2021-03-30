@@ -35,15 +35,13 @@ struct __align__(8) __frag_base<double, size> {
 	enum {num_elements = size};
 };
 
-template <class Use, int M, int N, int K> struct get_M;
-template <int M, int N, int K> struct get_M<nvcuda::wmma::matrix_a   , M, N, K>{static const int value = M;};
-template <int M, int N, int K> struct get_M<nvcuda::wmma::matrix_b   , M, N, K>{static const int value = K;};
-template <int M, int N, int K> struct get_M<nvcuda::wmma::accumulator, M, N, K>{static const int value = M;};
+template <class Use, int M, int N, int K> struct select_value;
+template <int M, int N, int K> struct select_value<nvcuda::wmma::matrix_a   , M, N, K>{static const int value = M;};
+template <int M, int N, int K> struct select_value<nvcuda::wmma::matrix_b   , M, N, K>{static const int value = N;};
+template <int M, int N, int K> struct select_value<nvcuda::wmma::accumulator, M, N, K>{static const int value = K;};
 
-template <class Use, int M, int N, int K> struct get_N;
-template <int M, int N, int K> struct get_N<nvcuda::wmma::matrix_a   , M, N, K>{static const int value = K;};
-template <int M, int N, int K> struct get_N<nvcuda::wmma::matrix_b   , M, N, K>{static const int value = N;};
-template <int M, int N, int K> struct get_N<nvcuda::wmma::accumulator, M, N, K>{static const int value = N;};
+template <class Use, int M, int N, int K> struct get_M : public select_value<Use, M, K, M>{};
+template <class Use, int M, int N, int K> struct get_N : public select_value<Use, K, N, N>{};
 
 template <class Layout, int col_value, int row_value> struct layout_switch;
 template <int col_value, int row_value> struct layout_switch<nvcuda::wmma::col_major, col_value, row_value> {static const int value = col_value;};

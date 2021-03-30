@@ -1,5 +1,6 @@
 #ifndef __WMMAE_MMA_SIMT__
 #define __WMMAE_MMA_SIMT__
+#include <type_traits>
 #include "detail/m16n16k16.hpp"
 
 namespace mtk {
@@ -21,17 +22,17 @@ __device__ inline void foreach(const nvcuda::wmma::layout_t layout, Func func) {
 	mtk::wmma::mma_simt::foreach(frag, layout, func);
 }
 
-//template <class Frag_T, class Func>
-//__device__ inline void foreach_v(Func func) {
-//	typename std::remove_reference<Frag_T>::type frag;
-//	mtk::wmma::mma_simt::foreach_v(frag, func);
-//}
-//
-//template <class Frag_T, class Func>
-//__device__ inline void foreach_v(const nvcuda::wmma::layout_t layout, Func func) {
-//	typename std::remove_reference<Frag_T>::type frag;
-//	mtk::wmma::mma_simt::foreach_v(frag, layout, func);
-//}
+template <class Frag_T, class Func>
+__device__ inline void foreach_v(Func func) {
+	typename std::remove_const<typename std::remove_reference<Frag_T>::type>::type frag;
+	mtk::wmma::mma_simt::foreach_v(frag, func);
+}
+
+template <class Frag_T, class Func>
+__device__ inline void foreach_v(const nvcuda::wmma::layout_t layout, Func func) {
+	typename std::remove_const<typename std::remove_reference<Frag_T>::type>::type frag;
+	mtk::wmma::mma_simt::foreach_v(frag, layout, func);
+}
 
 // ------------------------------
 // LD/ST functions for mma fragments
@@ -86,41 +87,41 @@ __device__ inline void store_matrix_sync(T* const ptr, const mtk::wmma::mma_simt
 		__syncthreads();
 }
 
-//// ------------------------------
-//// LD/ST vector functions for mma fragments
-//// ------------------------------
-//template <class Use, int M, int N, int K, class FT, class Layout, class T>
-//__device__ inline void load_vector(mtk::wmma::mma_simt::fragment<Use, M, N, K, FT, Layout>& frag, const T* const ptr) {
-//	mtk::wmma::mma_simt::foreach_v<decltype(frag)>(
-//		[&](const unsigned* frag_index_list, const unsigned fragment_index_count, const unsigned mem_index) {
-//			for (unsigned i = 0; i < fragment_index_count; i++) {
-//				const unsigned frag_index = frag_index_list[i];
-//				frag.x[frag_index] = mtk::wmma::mma_simt::detail::cast<typename mtk::wmma::mma_simt::detail::storage_t<FT>::type>(ptr[mem_index]);
-//			}
-//		});
-//}
-//
-//template <int M, int N, int K, class FT, class T>
-//__device__ inline void load_vector(mtk::wmma::mma_simt::fragment<nvcuda::wmma::accumulator, M, N, K, FT>& frag, const T* const ptr, const nvcuda::wmma::layout_t layout) {
-//	mtk::wmma::mma_simt::foreach_v<decltype(frag)>(layout,
-//		[&](const unsigned* frag_index_list, const unsigned fragment_index_count, const unsigned mem_index) {
-//			for (unsigned i = 0; i < fragment_index_count; i++) {
-//				const unsigned frag_index = frag_index_list[i];
-//				frag.x[frag_index] = mtk::wmma::mma_simt::detail::cast<typename mtk::wmma::mma_simt::detail::storage_t<FT>::type>(ptr[mem_index]);
-//			}
-//		});
-//}
-//
-//template <int M, int N, int K, class FT, class T>
-//__device__ inline void store_vector(T* const ptr, const mtk::wmma::mma_simt::fragment<nvcuda::wmma::accumulator, M, N, K, FT>& frag, const nvcuda::wmma::layout_t layout) {
-//	mtk::wmma::mma_simt::foreach_v<decltype(frag)>(layout,
-//		[&](const unsigned* frag_index_list, const unsigned fragment_index_count, const unsigned mem_index) {
-//			for (unsigned i = 0; i < fragment_index_count; i++) {
-//				const unsigned frag_index = frag_index_list[i];
-//				ptr[mem_index] = mtk::wmma::mma_simt::detail::cast<typename mtk::wmma::mma_simt::detail::storage_t<T>::type>(frag.x[frag_index]);
-//			}
-//		});
-//}
+// ------------------------------
+// LD/ST vector functions for mma fragments
+// ------------------------------
+template <class Use, int M, int N, int K, class FT, class Layout, class T>
+__device__ inline void load_vector(mtk::wmma::mma_simt::fragment<Use, M, N, K, FT, Layout>& frag, const T* const ptr) {
+	mtk::wmma::mma_simt::foreach_v<decltype(frag)>(
+		[&](const unsigned* frag_index_list, const unsigned fragment_index_count, const unsigned mem_index) {
+			for (unsigned i = 0; i < fragment_index_count; i++) {
+				const unsigned frag_index = frag_index_list[i];
+				frag.x[frag_index] = mtk::wmma::mma_simt::detail::cast<typename mtk::wmma::mma_simt::detail::storage_t<FT>::type>(ptr[mem_index]);
+			}
+		});
+}
+
+template <int M, int N, int K, class FT, class T>
+__device__ inline void load_vector(mtk::wmma::mma_simt::fragment<nvcuda::wmma::accumulator, M, N, K, FT>& frag, const T* const ptr, const nvcuda::wmma::layout_t layout) {
+	mtk::wmma::mma_simt::foreach_v<decltype(frag)>(layout,
+		[&](const unsigned* frag_index_list, const unsigned fragment_index_count, const unsigned mem_index) {
+			for (unsigned i = 0; i < fragment_index_count; i++) {
+				const unsigned frag_index = frag_index_list[i];
+				frag.x[frag_index] = mtk::wmma::mma_simt::detail::cast<typename mtk::wmma::mma_simt::detail::storage_t<FT>::type>(ptr[mem_index]);
+			}
+		});
+}
+
+template <int M, int N, int K, class FT, class T>
+__device__ inline void store_vector(T* const ptr, const mtk::wmma::mma_simt::fragment<nvcuda::wmma::accumulator, M, N, K, FT>& frag, const nvcuda::wmma::layout_t layout) {
+	mtk::wmma::mma_simt::foreach_v<decltype(frag)>(layout,
+		[&](const unsigned* frag_index_list, const unsigned fragment_index_count, const unsigned mem_index) {
+			for (unsigned i = 0; i < fragment_index_count; i++) {
+				const unsigned frag_index = frag_index_list[i];
+				ptr[mem_index] = mtk::wmma::mma_simt::detail::cast<typename mtk::wmma::mma_simt::detail::storage_t<T>::type>(frag.x[frag_index]);
+			}
+		});
+}
 
 template <class MatrixType, int M, int N, int K, class MemMajor, class T>
 __device__ inline void print_fragment(const mtk::wmma::mma_simt::fragment<MatrixType, M, N, K, T, MemMajor>& frag, const char* name = "") {
