@@ -22,7 +22,7 @@ __global__ void mma_kernel_abcd(float* const d_ptr, const float* const a_ptr, co
 
     mtk::wmma::mma_simt::fragment<nvcuda::wmma::matrix_a   , 16, 16, 16, float, nvcuda::wmma::col_major> frag_a;
     mtk::wmma::mma_simt::fragment<nvcuda::wmma::matrix_b   , 16, 16, 16, float, nvcuda::wmma::col_major> frag_b;
-    mtk::wmma::mma_simt::fragment<nvcuda::wmma::accumulator, 16, 16, 16, float, void    > frag_c, frag_d;
+    mtk::wmma::mma_simt::fragment<nvcuda::wmma::accumulator, 16, 16, 16, float, void> frag_c, frag_d;
     // Load A
     //mtk::test_utils::copy_matrix(smem, LD, a_ptr, N, N, N);
     mtk::wmma::mma_simt::load_matrix_sync(frag_a, smem, LD);
@@ -61,6 +61,8 @@ __global__ void mma_kernel_abcd(float* const d_ptr, const float* const a_ptr, co
 - `mtk::wmma::mma_sync`
 
 - `mtk::wmma::fill_zero`
+- `mtk::wmma::load_vector`
+- `mtk::wmma::store_vector`
 
 
 ## License
