@@ -1,5 +1,6 @@
 #ifndef __WMMAE_MMA_SIMT__
 #define __WMMAE_MMA_SIMT__
+#include <type_traits>
 #include "detail/m16n16k16.hpp"
 
 namespace mtk {
@@ -23,13 +24,13 @@ __device__ inline void foreach(const nvcuda::wmma::layout_t layout, Func func) {
 
 template <class Frag_T, class Func>
 __device__ inline void foreach_v(Func func) {
-	typename std::remove_reference<Frag_T>::type frag;
+	typename std::remove_const<typename std::remove_reference<Frag_T>::type>::type frag;
 	mtk::wmma::mma_simt::foreach_v(frag, func);
 }
 
 template <class Frag_T, class Func>
 __device__ inline void foreach_v(const nvcuda::wmma::layout_t layout, Func func) {
-	typename std::remove_reference<Frag_T>::type frag;
+	typename std::remove_const<typename std::remove_reference<Frag_T>::type>::type frag;
 	mtk::wmma::mma_simt::foreach_v(frag, layout, func);
 }
 
