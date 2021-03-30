@@ -116,6 +116,65 @@ __device__ inline void foreach(mtk::wmma::mma_simt::fragment<nvcuda::wmma::accum
 	}
 }
 
+// foreach
+template <class Func, class T>
+__device__ void foreach_v(
+		fragment<nvcuda::wmma::matrix_a, 16, 16, 16, T, nvcuda::wmma::col_major>& frag, const Func func
+		) {
+	const auto m = threadIdx.x & 0xf;
+	if (threadIdx.x & 0b10000u) return;
+
+	{const unsigned frag_index_list[1] = {0};func(frag_index_list, 1, m);}
+}
+
+template <class Func, class T>
+__device__ void foreach_v(
+		fragment<nvcuda::wmma::matrix_a, 16, 16, 16, T, nvcuda::wmma::row_major>& frag, const Func func
+		) {
+	if (threadIdx.x & 0b01111u) return;
+	const auto n_offset = (threadIdx.x >> 4) << 3;
+	for (unsigned i = 0; i < frag.num_elements; i++) {
+		{const unsigned frag_index_list[1] = {i};func(frag_index_list, 1, n_offset + i);}
+	}
+}
+
+template <class Func, class T>
+__device__ void foreach_v(
+		fragment<nvcuda::wmma::matrix_b, 16, 16, 16, T, nvcuda::wmma::col_major>& frag, const Func func
+		) {
+	if (threadIdx.x & 0b01111u) return;
+	const auto m_offset = (threadIdx.x >> 4) << 3;
+	for (unsigned i = 0; i < frag.num_elements; i++) {
+		{const unsigned frag_index_list[1] = {i};func(frag_index_list, 1, m_offset + i);}
+	}
+}
+
+template <class Func, class T>
+__device__ void foreach_v(
+		fragment<nvcuda::wmma::matrix_b, 16, 16, 16, T, nvcuda::wmma::row_major>& frag, const Func func
+		) {
+	const auto n = threadIdx.x & 0xf;
+	if (threadIdx.x & 0b10000u) return;
+
+	{const unsigned frag_index_list[1] = {0};func(frag_index_list, 1, n);}
+}
+
+template <class Func, class T>
+__device__ inline void foreach_v(mtk::wmma::mma_simt::fragment<nvcuda::wmma::accumulator, 16, 16, 16, T>& frag, const nvcuda::wmma::layout_t layout, const Func func) {
+	if (layout == nvcuda::wmma::mem_col_major) {
+		if (threadIdx.x & 0b01111u) return;
+		const auto m_offset = (threadIdx.x >> 4) << 3;
+		for (unsigned i = 0; i < frag.num_elements; i++) {
+			{const unsigned frag_index_list[1] = {i};func(frag_index_list, 1, m_offset + i);}
+		}
+	} else {
+		const auto n = threadIdx.x & 0xf;
+		if (threadIdx.x & 0b10000u) return;
+
+		{const unsigned frag_index_list[1] = {0};func(frag_index_list, 1, n);}
+	}
+}
+
 // mma
 template <class AB_T, class A_Layout, class B_Layout, class C_T, class D_T>
 __device__ void mma_sync(
