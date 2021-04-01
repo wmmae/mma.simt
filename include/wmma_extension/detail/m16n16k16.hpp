@@ -201,10 +201,11 @@ __device__ void mma_sync(
 		1, 2, 1, 4, 2, 1, 2, 8, 4, 2, 1, 2, 4, 2, 1
 	};
 
+	detail::fma<AB_T, AB_T, C_T> mfma;
 	unsigned acc_index = threadIdx.x & 0xf;
 	array_acc[acc_index] = detail::cast<C_T>(0);
 	for (unsigned k = 0; k < frag_a.num_elements; k++) {
-		array_acc[acc_index] = detail::fma(array_a[k], array_b[k], array_acc[acc_index]);
+		array_acc[acc_index] = mfma(array_a[k], array_b[k], array_acc[acc_index]);
 	}
 	for (unsigned s = 0; s < num_swaps; s++) {
 		const unsigned swap_index = swap_index_list[s];
@@ -215,7 +216,7 @@ __device__ void mma_sync(
 			// swap
 			array_a[k] = __shfl_xor_sync(0xffffffff, array_a[k], swap_index);
 			// fma
-			array_acc[acc_index] = detail::fma(array_a[k], array_b[k], array_acc[acc_index]);
+			array_acc[acc_index] = mfma(array_a[k], array_b[k], array_acc[acc_index]);
 		}
 	}
 
