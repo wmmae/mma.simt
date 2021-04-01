@@ -8,18 +8,21 @@ namespace mma_simt {
 namespace detail {
 
 template <class A_T, class B_T, class C_T>
-__device__ inline C_T fma(const A_T a, const B_T b, const C_T c) {
-	const auto fa = cast<float>(a);
-	const auto fb = cast<float>(b);
-	const auto fc = cast<float>(c);
-	return fa * fb + fc;
-}
+struct fma {
+	__device__ C_T operator() (const A_T a, const B_T b, const C_T c) {
+		const auto fa = cast<float>(a);
+		const auto fb = cast<float>(b);
+		const auto fc = cast<float>(c);
+		return fa * fb + fc;
+	}
+};
 
 template <>
-__device__ inline double fma<double, double, double>(const double a, const double b, const double c) {
-	return a * b + c;
-}
-
+struct fma<double, double, double> {
+	__device__ double operator() (const double a, const double b, const double c) {
+		return a * b + c;
+	}
+};
 } // namespace detail
 } // namespace mma_simt
 } // namespace wmma
