@@ -181,7 +181,8 @@ __device__ void mma_sync(
 		fragment<nvcuda::wmma::accumulator, 16, 16, 16, D_T , void>& frag_d,
 		const fragment<nvcuda::wmma::matrix_a   , 16, 16, 16, AB_T, A_Layout>& frag_a,
 		const fragment<nvcuda::wmma::matrix_b   , 16, 16, 16, AB_T, B_Layout>& frag_b,
-		const fragment<nvcuda::wmma::accumulator, 16, 16, 16, C_T , void>& frag_c
+		const fragment<nvcuda::wmma::accumulator, 16, 16, 16, C_T , void>& frag_c,
+		const mtk::wmma::mma_simt::detail::fma<AB_T, AB_T, C_T>& mfma = mtk::wmma::mma_simt::detail::fma<AB_T, AB_T, C_T>()
 		) {
 	AB_T array_a[frag_a.num_elements];
 	AB_T array_b[frag_b.num_elements];
@@ -201,7 +202,6 @@ __device__ void mma_sync(
 		1, 2, 1, 4, 2, 1, 2, 8, 4, 2, 1, 2, 4, 2, 1
 	};
 
-	detail::fma<AB_T, AB_T, C_T> mfma;
 	unsigned acc_index = threadIdx.x & 0xf;
 	array_acc[acc_index] = detail::cast<C_T>(0);
 	for (unsigned k = 0; k < frag_a.num_elements; k++) {
